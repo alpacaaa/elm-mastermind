@@ -1,0 +1,121 @@
+html {
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+html,body {
+  margin: 0;
+  padding: 0;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+body {
+  text-align: center;
+}
+
+.mastermind {
+  margin: 1em 0 0;
+  display: inline-block;
+  text-align: initial;
+}
+.mastermind .pegboard {
+  display: flex;
+  padding: 10px;
+}
+.mastermind .peg {
+  width: 40px;
+  height: 40px;
+  margin: 0 10px;
+  border-radius: 20px;
+}
+.mastermind .red {
+  background: #FF4136;
+}
+.mastermind .blue {
+  background: #0074D9;
+}
+.mastermind .cyan {
+  background: #7FDBFF;
+}
+.mastermind .green {
+  background: #2ECC40;
+}
+.mastermind .black {
+  background: #111;
+}
+.mastermind .yellow {
+  background: #FFDC00;
+}
+.mastermind .white {
+  background: white;
+  border: 1px solid black;
+}
+.mastermind .empty {
+  background: #aaa;
+}
+.mastermind .transparent {
+  display: none;
+}
+.mastermind .hint-wrapper {
+  display: flex;
+  width: 80px;
+  flex-wrap: wrap;
+}
+.mastermind .hint {
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  margin: 5px;
+}
+.mastermind .decoding-row {
+  display: flex;
+  margin: 40px 0;
+  position: relative;
+}
+.mastermind .decoding-row .pegboard {
+  margin-right: 40px;
+}
+.mastermind .current-combination .peg {
+  cursor: pointer;
+}
+.mastermind .current-combination .pegboard + .pegboard {
+  display: flex;
+  border: 1px solid #333;
+}
+.mastermind .current-combination .chooser {
+  position: absolute;
+  top: 65px;
+  margin-left: 20px;
+}
+.mastermind .current-combination .chooser .peg {
+  margin: 10px 0;
+}
+.show-correct {
+  padding: 1.5em;
+  background: #eee;
+}
+.show-correct button {
+  margin-left: 1em;
+  cursor: pointer;
+}
+.surrender {
+  background: #fda;
+  display: inline-block;
+}
+.congrats {
+  padding: 0 20px 3em;
+  font-size: 22px;
+}
+.congrats span {
+  color: blue;
+  cursor: pointer;
+}
+code {
+  font-size: 16px;
+}
+.explain {
+  margin: 1.5em 0;
+}
