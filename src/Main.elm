@@ -1,15 +1,16 @@
 module Main exposing (..)
 
 import Html exposing (..)
-import Html.Attributes exposing (class, style, disabled)
+import Html.Attributes exposing (class, disabled, style)
 import Html.Events exposing (onClick)
 import Random
 import String
+import Browser
 
-
+main: Program () Model Msg
 main =
-    Html.program
-        { init = initialModel
+    Browser.element
+        { init = \_ -> initialModel
         , view = view
         , update = update
         , subscriptions = \_ -> Sub.none
@@ -90,11 +91,12 @@ emptyCombination =
 
 initialModel : ( Model, Cmd Msg )
 initialModel =
-    { correct = [ Red, Green, Green, Blue ]
-    , guesses = []
-    , state = Playing emptyCombination Nothing
-    }
-        ! [ randomList Shuffle (guessSize * guessSize) ]
+    ( { correct = [ Red, Green, Green, Blue ]
+      , guesses = []
+      , state = Playing emptyCombination Nothing
+      }
+    , randomList Shuffle (guessSize * guessSize)
+    )
 
 
 
@@ -110,7 +112,7 @@ randomList msg len =
 
 shuffle : List comparable -> List a -> List a
 shuffle random list =
-    List.map2 (,) list random
+    List.map2 (\a b -> ( a, b )) list random
         |> List.sortBy Tuple.second
         |> List.unzip
         |> Tuple.first
@@ -137,7 +139,7 @@ http://stackoverflow.com/questions/2005723/how-to-count-the-white-correctly-in-m
 
 tag : a -> Int -> List a
 tag =
-    flip List.repeat
+    \b a -> List.repeat a b
 
 
 processGuess : Combination -> Combination -> Guess
@@ -183,7 +185,9 @@ update msg model =
             initialModel
 
         _ ->
-            update_ msg model ! []
+            ( update_ msg model
+            , Cmd.none
+            )
 
 
 update_ : Msg -> Model -> Model
@@ -231,10 +235,11 @@ update_ msg model =
                         newModel =
                             { model | guesses = model.guesses ++ [ guess ] }
                     in
-                        if isOver then
-                            { newModel | state = GameOver }
-                        else
-                            { newModel | state = Playing emptyCombination Nothing }
+                    if isOver then
+                        { newModel | state = GameOver }
+
+                    else
+                        { newModel | state = Playing emptyCombination Nothing }
 
                 _ ->
                     model
@@ -255,7 +260,15 @@ update_ msg model =
 
 pegClass : Color -> String
 pegClass color =
-    String.toLower (toString color)
+    String.toLower <|
+        case color of
+            Red -> "Red"
+            Green -> "Green"
+            Blue -> "Blue"
+            Cyan -> "Cyan"
+            Yellow -> "Yellow"
+            Empty -> ""
+
 
 
 hintClass : Hint -> String
@@ -270,12 +283,12 @@ hintClass hint =
 
 drawPeg : Msg -> Color -> Html Msg
 drawPeg msg color =
-    div [ class <| "peg " ++ (pegClass color), onClick msg ] []
+    div [ class <| "peg " ++ pegClass color, onClick msg ] []
 
 
 drawHint : Hint -> Html Msg
 drawHint hint =
-    div [ class <| "hint " ++ (hintClass hint) ] []
+    div [ class <| "hint " ++ hintClass hint ] []
 
 
 drawPegboard : Combination -> (Index -> Msg) -> Html Msg
@@ -299,13 +312,12 @@ pegChooser selected =
 
         Just index ->
             let
-                left =
-                    60 * index
+                leftCss : String
+                leftCss =
+                    (String.fromInt <| 60 * index) ++ "px"
 
-                css =
-                    [ ( "left", (toString left) ++ "px" ) ]
             in
-                div [ class "chooser", style css ]
+                div [ class "chooser", style "left" leftCss ]
                     [ drawPeg (Choose Red) Red
                     , drawPeg (Choose Yellow) Yellow
                     , drawPeg (Choose Green) Green
@@ -320,11 +332,11 @@ decodingRow combination selectedPeg =
         canConfirm =
             List.all ((/=) Empty) combination
     in
-        div [ class "decoding-row current-combination" ]
-            [ drawPegboard combination SelectPeg
-            , button [ disabled (not canConfirm), onClick Confirm ] [ text "Confirm" ]
-            , pegChooser selectedPeg
-            ]
+    div [ class "decoding-row current-combination" ]
+        [ drawPegboard combination SelectPeg
+        , button [ disabled (not canConfirm), onClick Confirm ] [ text "Confirm" ]
+        , pegChooser selectedPeg
+        ]
 
 
 gameView : List Guess -> Html Msg -> Html Msg
@@ -344,7 +356,7 @@ showCorrect : Msg -> Html Msg
 showCorrect msg =
     div [ class "show-correct" ]
         [ text "I had enough!"
-        , button [ (onClick msg) ] [ text "Show me the answer" ]
+        , button [ onClick msg ] [ text "Show me the answer" ]
         ]
 
 
@@ -361,9 +373,9 @@ surrenderView correct =
 
 
 playAgain : Msg -> String -> Html Msg
-playAgain msg info =
+playAgain msg infoMsg =
     div [ class "congrats" ]
-        [ p [] [ text info ]
+        [ p [] [ text infoMsg ]
         , text "Do you want to "
         , span [ onClick Reset ] [ text "play again?" ]
         ]
