@@ -1,13 +1,14 @@
-module Main exposing (..)
+module Main exposing (Color(..), Combination, GameState(..), Guess, Hint(..), Index, Model, Msg(..), colors, decodingRow, drawGuess, drawHint, drawPeg, drawPegboard, emptyCombination, gameView, guessSize, hintClass, info, initialModel, main, pegChooser, pegClass, playAgain, populate, processGuess, randomCombination, randomList, renderGame, showCorrect, shuffle, surrenderView, tag, update, update_, view)
 
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (class, disabled, style)
 import Html.Events exposing (onClick)
 import Random
 import String
-import Browser
 
-main: Program () Model Msg
+
+main : Program () Model Msg
 main =
     Browser.element
         { init = \_ -> initialModel
@@ -165,7 +166,7 @@ processGuess guess correct =
         whites =
             whiteBlacks - blacks
     in
-        ( guess, (tag CorrectPosition blacks) ++ (tag WrongPosition whites) )
+    ( guess, tag CorrectPosition blacks ++ tag WrongPosition whites )
 
 
 populate : Combination -> List ( Color, Int )
@@ -175,7 +176,7 @@ populate combination =
             List.filter ((==) c) combination
                 |> List.length
     in
-        List.map (\c -> ( c, countOccurrencies c )) colors
+    List.map (\c -> ( c, countOccurrencies c )) colors
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -211,13 +212,14 @@ update_ msg model =
                         replace i item =
                             if i == index then
                                 color
+
                             else
                                 item
 
                         newCombination =
                             List.indexedMap replace combination
                     in
-                        { model | state = Playing newCombination Nothing }
+                    { model | state = Playing newCombination Nothing }
 
                 _ ->
                     model
@@ -262,13 +264,23 @@ pegClass : Color -> String
 pegClass color =
     String.toLower <|
         case color of
-            Red -> "Red"
-            Green -> "Green"
-            Blue -> "Blue"
-            Cyan -> "Cyan"
-            Yellow -> "Yellow"
-            Empty -> ""
+            Red ->
+                "Red"
 
+            Green ->
+                "Green"
+
+            Blue ->
+                "Blue"
+
+            Cyan ->
+                "Cyan"
+
+            Yellow ->
+                "Yellow"
+
+            Empty ->
+                ""
 
 
 hintClass : Hint -> String
@@ -315,15 +327,14 @@ pegChooser selected =
                 leftCss : String
                 leftCss =
                     (String.fromInt <| 60 * index) ++ "px"
-
             in
-                div [ class "chooser", style "left" leftCss ]
-                    [ drawPeg (Choose Red) Red
-                    , drawPeg (Choose Yellow) Yellow
-                    , drawPeg (Choose Green) Green
-                    , drawPeg (Choose Cyan) Cyan
-                    , drawPeg (Choose Blue) Blue
-                    ]
+            div [ class "chooser", style "left" leftCss ]
+                [ drawPeg (Choose Red) Red
+                , drawPeg (Choose Yellow) Yellow
+                , drawPeg (Choose Green) Green
+                , drawPeg (Choose Cyan) Cyan
+                , drawPeg (Choose Blue) Blue
+                ]
 
 
 decodingRow : Combination -> Maybe Index -> Html Msg
@@ -388,6 +399,7 @@ view model =
             div []
                 [ if List.length model.guesses > 0 then
                     showCorrect ShowCorrect
+
                   else
                     info
                 , renderGame model.guesses combination maybeSelected
