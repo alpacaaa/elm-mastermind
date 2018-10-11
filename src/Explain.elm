@@ -1,13 +1,15 @@
-module Main exposing (..)
+module Main exposing (Color(..), Combination, Guess, Hint(..), Model, Msg(..), colors, correct, drawGuess, drawHint, drawPeg, drawPegboard, explain, guess1, guess2, guess3, hintClass, initialModel, main, pegClass, renderGame, update, view)
 
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (class)
 import String
 
 
+main: Program () Model Msg
 main =
-    Html.program
-        { init = initialModel
+    Browser.element
+        { init = \_ -> initialModel
         , view = view
         , update = update
         , subscriptions = \_ -> Sub.none
@@ -82,10 +84,11 @@ guess3 =
 
 initialModel : ( Model, Cmd Msg )
 initialModel =
-    { correct = correct
-    , guesses = [ guess1, guess2, guess3 ]
-    }
-        ! []
+    ( { correct = correct
+      , guesses = [ guess1, guess2, guess3 ]
+      }
+    , Cmd.none
+    )
 
 
 
@@ -94,7 +97,7 @@ initialModel =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    model ! []
+    ( model, Cmd.none )
 
 
 
@@ -103,7 +106,25 @@ update msg model =
 
 pegClass : Color -> String
 pegClass color =
-    String.toLower (toString color)
+    String.toLower <|
+        case color of
+            Red ->
+                "Red"
+
+            Green ->
+                "Green"
+
+            Blue ->
+                "Blue"
+
+            Cyan ->
+                "Cyan"
+
+            Yellow ->
+                "Yellow"
+
+            Empty ->
+                ""
 
 
 hintClass : Hint -> String
@@ -118,12 +139,12 @@ hintClass hint =
 
 drawPeg : Color -> Html Msg
 drawPeg color =
-    div [ class <| "peg " ++ (pegClass color) ] []
+    div [ class <| "peg " ++ pegClass color ] []
 
 
 drawHint : Hint -> Html Msg
 drawHint hint =
-    div [ class <| "hint " ++ (hintClass hint) ] []
+    div [ class <| "hint " ++ hintClass hint ] []
 
 
 drawPegboard : Combination -> Html Msg
