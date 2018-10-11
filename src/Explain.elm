@@ -1,13 +1,15 @@
-module Main exposing (..)
+module Main exposing (Color(..), Combination, Guess, Hint(..), Model, Msg(..), colors, correct, drawGuess, drawHint, drawPeg, drawPegboard, explain, guess1, guess2, guess3, hintClass, initialModel, main, pegClass, renderGame, update, view)
 
+import Browser
 import Html exposing (..)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (class, href, rel)
 import String
 
 
+main : Program () Model Msg
 main =
-    Html.program
-        { init = initialModel
+    Browser.element
+        { init = \_ -> initialModel
         , view = view
         , update = update
         , subscriptions = \_ -> Sub.none
@@ -82,10 +84,11 @@ guess3 =
 
 initialModel : ( Model, Cmd Msg )
 initialModel =
-    { correct = correct
-    , guesses = [ guess1, guess2, guess3 ]
-    }
-        ! []
+    ( { correct = correct
+      , guesses = [ guess1, guess2, guess3 ]
+      }
+    , Cmd.none
+    )
 
 
 
@@ -94,7 +97,7 @@ initialModel =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    model ! []
+    ( model, Cmd.none )
 
 
 
@@ -103,7 +106,25 @@ update msg model =
 
 pegClass : Color -> String
 pegClass color =
-    String.toLower (toString color)
+    String.toLower <|
+        case color of
+            Red ->
+                "Red"
+
+            Green ->
+                "Green"
+
+            Blue ->
+                "Blue"
+
+            Cyan ->
+                "Cyan"
+
+            Yellow ->
+                "Yellow"
+
+            Empty ->
+                "Empty"
 
 
 hintClass : Hint -> String
@@ -118,12 +139,12 @@ hintClass hint =
 
 drawPeg : Color -> Html Msg
 drawPeg color =
-    div [ class <| "peg " ++ (pegClass color) ] []
+    div [ class <| "peg " ++ pegClass color ] []
 
 
 drawHint : Hint -> Html Msg
 drawHint hint =
-    div [ class <| "hint " ++ (hintClass hint) ] []
+    div [ class <| "hint " ++ hintClass hint ] []
 
 
 drawPegboard : Combination -> Html Msg
@@ -152,11 +173,18 @@ explain str t =
 
 view : Model -> Html Msg
 view model =
-    div [ class "mastermind" ]
-        [ explain "This is a " "Combination"
-        , drawPegboard [ Red, Red, Red, Red ]
-        , explain "Given the solution" ""
-        , drawPegboard model.correct
-        , explain "These are valid " "Guesses"
-        , div [] <| List.map drawGuess model.guesses
+    div []
+        [ node "link"
+            [ rel "stylesheet"
+            , href "src/main.css"
+            ]
+            []
+        , div [ class "mastermind" ]
+            [ explain "This is a " "Combination"
+            , drawPegboard [ Red, Red, Red, Red ]
+            , explain "Given the solution" ""
+            , drawPegboard model.correct
+            , explain "These are valid " "Guesses"
+            , div [] <| List.map drawGuess model.guesses
+            ]
         ]

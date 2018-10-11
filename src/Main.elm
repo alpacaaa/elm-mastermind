@@ -1,15 +1,17 @@
-module Main exposing (..)
+module Main exposing (Color(..), Combination, GameState(..), Guess, Hint(..), Index, Model, Msg(..), colors, decodingRow, drawGuess, drawHint, drawPeg, drawPegboard, emptyCombination, gameView, guessSize, hintClass, info, initialModel, main, pegChooser, pegClass, playAgain, populate, processGuess, randomCombination, randomList, renderGame, showCorrect, shuffle, surrenderView, tag, update, update_, view)
 
+import Browser
 import Html exposing (..)
-import Html.Attributes exposing (class, style, disabled)
+import Html.Attributes exposing (class, disabled, href, rel, style)
 import Html.Events exposing (onClick)
 import Random
 import String
 
 
+main : Program () Model Msg
 main =
-    Html.program
-        { init = initialModel
+    Browser.element
+        { init = \_ -> initialModel
         , view = view
         , update = update
         , subscriptions = \_ -> Sub.none
@@ -90,11 +92,12 @@ emptyCombination =
 
 initialModel : ( Model, Cmd Msg )
 initialModel =
-    { correct = [ Red, Green, Green, Blue ]
-    , guesses = []
-    , state = Playing emptyCombination Nothing
-    }
-        ! [ randomList Shuffle (guessSize * guessSize) ]
+    ( { correct = [ Red, Green, Green, Blue ]
+      , guesses = []
+      , state = Playing emptyCombination Nothing
+      }
+    , randomList Shuffle (guessSize * guessSize)
+    )
 
 
 
@@ -110,7 +113,7 @@ randomList msg len =
 
 shuffle : List comparable -> List a -> List a
 shuffle random list =
-    List.map2 (,) list random
+    List.map2 (\a b -> ( a, b )) list random
         |> List.sortBy Tuple.second
         |> List.unzip
         |> Tuple.first
@@ -137,7 +140,7 @@ http://stackoverflow.com/questions/2005723/how-to-count-the-white-correctly-in-m
 
 tag : a -> Int -> List a
 tag =
-    flip List.repeat
+    \b a -> List.repeat a b
 
 
 processGuess : Combination -> Combination -> Guess
@@ -163,7 +166,7 @@ processGuess guess correct =
         whites =
             whiteBlacks - blacks
     in
-        ( guess, (tag CorrectPosition blacks) ++ (tag WrongPosition whites) )
+    ( guess, tag CorrectPosition blacks ++ tag WrongPosition whites )
 
 
 populate : Combination -> List ( Color, Int )
@@ -173,7 +176,7 @@ populate combination =
             List.filter ((==) c) combination
                 |> List.length
     in
-        List.map (\c -> ( c, countOccurrencies c )) colors
+    List.map (\c -> ( c, countOccurrencies c )) colors
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -183,7 +186,9 @@ update msg model =
             initialModel
 
         _ ->
-            update_ msg model ! []
+            ( update_ msg model
+            , Cmd.none
+            )
 
 
 update_ : Msg -> Model -> Model
@@ -207,13 +212,14 @@ update_ msg model =
                         replace i item =
                             if i == index then
                                 color
+
                             else
                                 item
 
                         newCombination =
                             List.indexedMap replace combination
                     in
-                        { model | state = Playing newCombination Nothing }
+                    { model | state = Playing newCombination Nothing }
 
                 _ ->
                     model
@@ -231,10 +237,11 @@ update_ msg model =
                         newModel =
                             { model | guesses = model.guesses ++ [ guess ] }
                     in
-                        if isOver then
-                            { newModel | state = GameOver }
-                        else
-                            { newModel | state = Playing emptyCombination Nothing }
+                    if isOver then
+                        { newModel | state = GameOver }
+
+                    else
+                        { newModel | state = Playing emptyCombination Nothing }
 
                 _ ->
                     model
@@ -255,7 +262,25 @@ update_ msg model =
 
 pegClass : Color -> String
 pegClass color =
-    String.toLower (toString color)
+    String.toLower <|
+        case color of
+            Red ->
+                "Red"
+
+            Green ->
+                "Green"
+
+            Blue ->
+                "Blue"
+
+            Cyan ->
+                "Cyan"
+
+            Yellow ->
+                "Yellow"
+
+            Empty ->
+                "Empty"
 
 
 hintClass : Hint -> String
@@ -270,12 +295,12 @@ hintClass hint =
 
 drawPeg : Msg -> Color -> Html Msg
 drawPeg msg color =
-    div [ class <| "peg " ++ (pegClass color), onClick msg ] []
+    div [ class <| "peg " ++ pegClass color, onClick msg ] []
 
 
 drawHint : Hint -> Html Msg
 drawHint hint =
-    div [ class <| "hint " ++ (hintClass hint) ] []
+    div [ class <| "hint " ++ hintClass hint ] []
 
 
 drawPegboard : Combination -> (Index -> Msg) -> Html Msg
@@ -299,19 +324,17 @@ pegChooser selected =
 
         Just index ->
             let
-                left =
-                    60 * index
-
-                css =
-                    [ ( "left", (toString left) ++ "px" ) ]
+                leftCss : String
+                leftCss =
+                    (String.fromInt <| 60 * index) ++ "px"
             in
-                div [ class "chooser", style css ]
-                    [ drawPeg (Choose Red) Red
-                    , drawPeg (Choose Yellow) Yellow
-                    , drawPeg (Choose Green) Green
-                    , drawPeg (Choose Cyan) Cyan
-                    , drawPeg (Choose Blue) Blue
-                    ]
+            div [ class "chooser", style "left" leftCss ]
+                [ drawPeg (Choose Red) Red
+                , drawPeg (Choose Yellow) Yellow
+                , drawPeg (Choose Green) Green
+                , drawPeg (Choose Cyan) Cyan
+                , drawPeg (Choose Blue) Blue
+                ]
 
 
 decodingRow : Combination -> Maybe Index -> Html Msg
@@ -320,11 +343,11 @@ decodingRow combination selectedPeg =
         canConfirm =
             List.all ((/=) Empty) combination
     in
-        div [ class "decoding-row current-combination" ]
-            [ drawPegboard combination SelectPeg
-            , button [ disabled (not canConfirm), onClick Confirm ] [ text "Confirm" ]
-            , pegChooser selectedPeg
-            ]
+    div [ class "decoding-row current-combination" ]
+        [ drawPegboard combination SelectPeg
+        , button [ disabled (not canConfirm), onClick Confirm ] [ text "Confirm" ]
+        , pegChooser selectedPeg
+        ]
 
 
 gameView : List Guess -> Html Msg -> Html Msg
@@ -344,7 +367,7 @@ showCorrect : Msg -> Html Msg
 showCorrect msg =
     div [ class "show-correct" ]
         [ text "I had enough!"
-        , button [ (onClick msg) ] [ text "Show me the answer" ]
+        , button [ onClick msg ] [ text "Show me the answer" ]
         ]
 
 
@@ -361,9 +384,9 @@ surrenderView correct =
 
 
 playAgain : Msg -> String -> Html Msg
-playAgain msg info =
+playAgain msg infoMsg =
     div [ class "congrats" ]
-        [ p [] [ text info ]
+        [ p [] [ text infoMsg ]
         , text "Do you want to "
         , span [ onClick Reset ] [ text "play again?" ]
         ]
@@ -371,21 +394,25 @@ playAgain msg info =
 
 view : Model -> Html Msg
 view model =
-    case model.state of
-        Playing combination maybeSelected ->
-            div []
-                [ if List.length model.guesses > 0 then
-                    showCorrect ShowCorrect
-                  else
-                    info
-                , renderGame model.guesses combination maybeSelected
-                ]
+    div []
+        [ node "link" [ rel "stylesheet", href "src/main.css" ] []
+        , case model.state of
+            Playing combination maybeSelected ->
+                div []
+                    [ if List.length model.guesses > 0 then
+                        showCorrect ShowCorrect
 
-        GameOver ->
-            gameView model.guesses (playAgain Reset "Yay! You win!")
+                      else
+                        info
+                    , renderGame model.guesses combination maybeSelected
+                    ]
 
-        Surrender ->
-            div []
-                [ gameView model.guesses (surrenderView model.correct)
-                , playAgain Reset "C'mon you can do it."
-                ]
+            GameOver ->
+                gameView model.guesses (playAgain Reset "Yay! You win!")
+
+            Surrender ->
+                div []
+                    [ gameView model.guesses (surrenderView model.correct)
+                    , playAgain Reset "C'mon you can do it."
+                    ]
+        ]
