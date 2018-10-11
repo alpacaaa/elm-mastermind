@@ -2,11 +2,11 @@ module Main exposing (Color(..), Combination, Guess, Hint(..), Model, Msg(..), c
 
 import Browser
 import Html exposing (..)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (class, href, rel)
 import String
 
 
-main: Program () Model Msg
+main : Program () Model Msg
 main =
     Browser.element
         { init = \_ -> initialModel
@@ -124,7 +124,7 @@ pegClass color =
                 "Yellow"
 
             Empty ->
-                ""
+                "Empty"
 
 
 hintClass : Hint -> String
@@ -173,11 +173,18 @@ explain str t =
 
 view : Model -> Html Msg
 view model =
-    div [ class "mastermind" ]
-        [ explain "This is a " "Combination"
-        , drawPegboard [ Red, Red, Red, Red ]
-        , explain "Given the solution" ""
-        , drawPegboard model.correct
-        , explain "These are valid " "Guesses"
-        , div [] <| List.map drawGuess model.guesses
+    div []
+        [ node "link"
+            [ rel "stylesheet"
+            , href "src/main.css"
+            ]
+            []
+        , div [ class "mastermind" ]
+            [ explain "This is a " "Combination"
+            , drawPegboard [ Red, Red, Red, Red ]
+            , explain "Given the solution" ""
+            , drawPegboard model.correct
+            , explain "These are valid " "Guesses"
+            , div [] <| List.map drawGuess model.guesses
+            ]
         ]

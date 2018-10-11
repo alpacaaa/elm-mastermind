@@ -2,7 +2,7 @@ module Main exposing (Color(..), Combination, GameState(..), Guess, Hint(..), In
 
 import Browser
 import Html exposing (..)
-import Html.Attributes exposing (class, disabled, style)
+import Html.Attributes exposing (class, disabled, href, rel, style)
 import Html.Events exposing (onClick)
 import Random
 import String
@@ -280,7 +280,7 @@ pegClass color =
                 "Yellow"
 
             Empty ->
-                ""
+                "Empty"
 
 
 hintClass : Hint -> String
@@ -394,22 +394,25 @@ playAgain msg infoMsg =
 
 view : Model -> Html Msg
 view model =
-    case model.state of
-        Playing combination maybeSelected ->
-            div []
-                [ if List.length model.guesses > 0 then
-                    showCorrect ShowCorrect
+    div []
+        [ node "link" [ rel "stylesheet", href "src/main.css" ] []
+        , case model.state of
+            Playing combination maybeSelected ->
+                div []
+                    [ if List.length model.guesses > 0 then
+                        showCorrect ShowCorrect
 
-                  else
-                    info
-                , renderGame model.guesses combination maybeSelected
-                ]
+                      else
+                        info
+                    , renderGame model.guesses combination maybeSelected
+                    ]
 
-        GameOver ->
-            gameView model.guesses (playAgain Reset "Yay! You win!")
+            GameOver ->
+                gameView model.guesses (playAgain Reset "Yay! You win!")
 
-        Surrender ->
-            div []
-                [ gameView model.guesses (surrenderView model.correct)
-                , playAgain Reset "C'mon you can do it."
-                ]
+            Surrender ->
+                div []
+                    [ gameView model.guesses (surrenderView model.correct)
+                    , playAgain Reset "C'mon you can do it."
+                    ]
+        ]
