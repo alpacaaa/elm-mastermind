@@ -78,7 +78,7 @@ randomList msg len =
 
 shuffle : List comparable -> List a -> List a
 shuffle random list =
-    List.map2 (,) list random
+    List.map2 (\a b -> ( a, b )) list random
         |> List.sortBy Tuple.second
         |> List.unzip
         |> Tuple.first
